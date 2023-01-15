@@ -68,9 +68,8 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
                 feature.append(af.max(np.nan_to_num(bf.speed(X_lat_sub, X_lon_sub, X_time_sub)), None))
                 feature.append(af.min(np.nan_to_num(bf.speed(X_lat_sub, X_lon_sub, X_time_sub)), None))
                 feature.append(af.sum(np.nan_to_num(bf.speed(X_lat_sub, X_lon_sub, X_time_sub))/len(X_lat_sub), None))
-                feature.append(af.max(np.nan_to_num(bf.direction(X_lat_sub, X_lon_sub)), None))
-                feature.append(af.min(np.nan_to_num(bf.direction(X_lat_sub, X_lon_sub)), None))
 
+                feature.append(af.max(np.nan_to_num(bf.distance(X_lat_sub, X_lon_sub)), None))
                 feature.append(af.max(np.nan_to_num(bf.distance(X_lat_sub, X_lon_sub)), None))
             #feature = np.hstack([np.array(x) for x in feature])
             features.append(feature)
