@@ -13,13 +13,14 @@ from tqdm.auto import tqdm
 
 from TCIF.algorithms.utils import preare
 from TCIF.classes.T_CIF_features import T_CIF_features
+from TCIF.classes.T_CIF_time import T_CIF_time
 
 np.seterr(divide='ignore', invalid='ignore')
 
 
 def run(els, lat_train, lon_train, time_train, lat_test, lon_test, time_test, classe_train):
-    tcif = T_CIF_features(n_trees=els[0], n_interval=els[1], min_length=els[2], interval_type=els[3],
-                          verbose=True)
+    tcif = T_CIF_time(n_trees=els[0], n_interval=els[1], min_length=els[2],
+                          verbose=False)
 
     train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
     test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
@@ -34,16 +35,15 @@ def run(els, lat_train, lon_train, time_train, lat_test, lon_test, time_test, cl
 if __name__ == "__main__":
     datasets = [y for x in os.walk("datasets/") for y in glob(os.path.join(x[0], '*.zip'))]
 
-    parameters = [
-        [500],  # n_trees
-        [3, 5, 10, 20, 50, 100],  # n_interval
-        [5, 10, 20, 50, 100, 200],  # min_length
-        ["rp"]  # interval_type
+    parameters_rp = [
+        [100, 200, 500, 1000, 5000],  # n_trees
+        [3, 5, 10, 20, 50, 100, 200],  # n_interval
+        [5, 10, 20, 50, 100, 200, 500, 1000],  # min_length
     ]
 
-    parameters_names = ["n_trees", "n_interval", "min_length", "interval_type"]
+    parameters_names = ["n_trees", "n_interval", "min_length"]
 
-    pbar_dataset = tqdm(datasets, position=1, leave=False)
+    pbar_dataset = tqdm(datasets, position=0, leave=False)
     for dataset in pbar_dataset:
         df = pd.read_csv(dataset)
         dataset_name = dataset.split('\\')[-1].split('/')[-1]
@@ -60,9 +60,9 @@ if __name__ == "__main__":
         id_train, classe_train, lat_train, lon_train, time_train = preare(df, tid_train)
         id_test, classe_test, lat_test, lon_test, time_test = preare(df, tid_test)
 
-        pool = ProcessPoolExecutor(min(1, psutil.cpu_count(logical=False)))
+        pool = ProcessPoolExecutor(max(1, psutil.cpu_count(logical=True)))
 
-        par = list(itertools.product(*parameters))
+        par = list(itertools.product(*parameters_rp))
 
         els_bar = tqdm(pool.map(run,
                                 par,
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                                 ), position=1, leave=False, total=len(par))
 
         result_all = []
-        for els, (time, y_pred) in zip(itertools.product(*parameters), els_bar):
+        for els, (time, y_pred) in zip(par, els_bar):
             els_bar.set_description("_".join([str(x) for x in els]) + ".csv")
             accuracy = accuracy_score(classe_test, y_pred)
             f1 = f1_score(classe_test, y_pred, average="micro")
@@ -85,7 +85,7 @@ if __name__ == "__main__":
             result_all.append(list(els)+[time, accuracy, f1, recall])
         pd.DataFrame(result_all,
                      columns=parameters_names + ["time", "accuracy", "f1", "recall"], index=None)\
-            .to_csv("results/"+"id-1.csv")
+            .to_csv("results/"+"time.csv")
 
 
 
