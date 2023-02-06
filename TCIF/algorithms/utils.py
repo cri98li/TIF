@@ -18,6 +18,8 @@ def preare(df, tid_list):
         _lon = []
         _time = []
         for _lat_el, _lon_el, _time_el in df_result[["c1", "c2", "t"]].values:
+            if _time_el in _time:
+                continue
             _time.append(_time_el)
             _lat.append(_lat_el)
             _lon.append(_lon_el)

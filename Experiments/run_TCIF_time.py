@@ -20,16 +20,19 @@ np.seterr(divide='ignore', invalid='ignore')
 
 def run(els, lat_train, lon_train, time_train, lat_test, lon_test, time_test, classe_train):
     tcif = T_CIF_time(n_trees=els[0], n_interval=els[1], min_length=els[2],
-                          verbose=False)
+                      verbose=False)
 
     train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
     test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
 
-    start = time.time()
-    tcif.fit(train, y=classe_train)
-    stop = time.time()
+    try:
+        start = time.time()
+        tcif.fit(train, y=classe_train)
+        stop = time.time()
 
-    return [stop - start, tcif.predict(test)]
+        return [stop - start, tcif.predict(test)]
+    except:
+        return [None, None]
 
 
 if __name__ == "__main__":
@@ -77,15 +80,15 @@ if __name__ == "__main__":
 
         result_all = []
         for els, (time, y_pred) in zip(par, els_bar):
+            if time is None:
+                continue
+
             els_bar.set_description("_".join([str(x) for x in els]) + ".csv")
             accuracy = accuracy_score(classe_test, y_pred)
             f1 = f1_score(classe_test, y_pred, average="micro")
             recall = recall_score(classe_test, y_pred, average="micro")
 
-            result_all.append(list(els)+[time, accuracy, f1, recall])
+            result_all.append(list(els) + [time, accuracy, f1, recall])
         pd.DataFrame(result_all,
-                     columns=parameters_names + ["time", "accuracy", "f1", "recall"], index=None)\
-            .to_csv("results/"+"time.csv")
-
-
-
+                     columns=parameters_names + ["time", "accuracy", "f1", "recall"], index=None) \
+            .to_csv("results/" + dataset_name + " - time.csv")

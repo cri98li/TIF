@@ -6,9 +6,9 @@ from TCIF.algorithms.utils import preare
 from TCIF.classes.T_CIF_time import T_CIF_time
 
 if __name__ == "__main__":
-    df = pd.read_csv("Experiments/datasets/vehicles.zip")
+    df = pd.read_csv("Experiments/datasets/animals.zip")
 
-    df[["c1", "c2"]] = df[["c1", "c2"]]/100000
+    #df[["c1", "c2"]] = df[["c1", "c2"]]/100000
 
     tid_train, tid_test, _, _ = train_test_split(df.groupby(by=["tid"]).max().reset_index()["tid"],
                                                  df.groupby(by=["tid"]).max().reset_index()["class"],
