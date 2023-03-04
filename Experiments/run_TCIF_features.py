@@ -18,8 +18,11 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 def run(els, lat_train, lon_train, time_train, lat_test, lon_test, time_test, classe_train):
+    if els[2] > els[3]:
+        return [None, None]
+
     tcif = T_CIF_features(n_trees=els[0], n_interval=els[1], min_length=els[2], max_length=els[3], interval_type=els[4],
-                          verbose=False)
+                          n_jobs=psutil.cpu_count(logical=False), verbose=False)
 
     train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
     test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
@@ -73,7 +76,7 @@ if __name__ == "__main__":
         id_train, classe_train, lat_train, lon_train, time_train = preare(df, tid_train)
         id_test, classe_test, lat_test, lon_test, time_test = preare(df, tid_test)
 
-        pool = ProcessPoolExecutor(max(1, psutil.cpu_count(logical=False)))
+        pool = ProcessPoolExecutor(min(1, psutil.cpu_count(logical=False)))
 
         par = list(itertools.product(*parameters_rp)) + list(itertools.product(*parameters_p))
 

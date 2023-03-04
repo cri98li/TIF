@@ -10,14 +10,15 @@ from CaGeo.algorithms.BasicFeatures import distance
 
 class T_CIF_space(T_CIF):
 
-    def __init__(self, n_trees, n_interval, min_length, max_length=np.inf, interval_type="percentage", seed=42,
-                 verbose=False):
+    def __init__(self, n_trees, n_interval, min_length, max_length=np.inf, interval_type="percentage", n_jobs=1,
+                 seed=42, verbose=False):
         super().__init__(
             n_trees=n_trees,
             n_interval=n_interval,
             min_length=min_length,
             max_length=max_length,
             interval_type=interval_type,
+            n_jobs=n_jobs,
             seed=seed,
             verbose=verbose
         )

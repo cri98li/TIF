@@ -47,7 +47,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
         # position=0):
         for feature in tqdm(self.executor.map(_transform_inner_loop, X, repeat(starts), repeat(stops),
                                          repeat(str(type(self))), repeat(self.min_length), repeat(self.interval_type),
-                                         ), total=len(X)):
+                                         ), total=len(X), disable=not self.verbose):
             features.append(feature)
 
         return np.array(features)[:, :, 0]

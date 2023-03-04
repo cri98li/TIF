@@ -10,13 +10,15 @@ class T_CIF_features(T_CIF):
 
     # interval types: {None: [a:b] or [0] if a > len(trj), percentage: percentage, reverse_fill: if a | b > len(trj),
     # reverse trj}
-    def __init__(self, n_trees, n_interval, min_length, max_length=np.inf, interval_type=None, seed=42, verbose=False):
+    def __init__(self, n_trees, n_interval, min_length, max_length=np.inf, interval_type=None, n_jobs=1, seed=42,
+                 verbose=False):
         super().__init__(
             n_trees=n_trees,
             n_interval=n_interval,
             min_length=min_length,
             max_length=max_length,
             interval_type=interval_type,
+            n_jobs=n_jobs,
             seed=seed,
             verbose=verbose
         )
