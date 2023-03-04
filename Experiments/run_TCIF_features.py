@@ -18,7 +18,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 def run(els, lat_train, lon_train, time_train, lat_test, lon_test, time_test, classe_train):
-    tcif = T_CIF_features(n_trees=els[0], n_interval=els[1], min_length=els[2], interval_type=els[3],
+    tcif = T_CIF_features(n_trees=els[0], n_interval=els[1], min_length=els[2], max_length=els[3], interval_type=els[4],
                           verbose=False)
 
     train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
@@ -38,20 +38,22 @@ if __name__ == "__main__":
     datasets = [y for x in os.walk("datasets/") for y in glob(os.path.join(x[0], '*.zip'))]
 
     parameters_rp = [
-        [100, 200, 500, 1000, 5000],  # n_trees
+        [100, 500, 1000, 5000],  # n_trees
         [3, 5, 10, 20, 50, 100, 200],  # n_interval
-        [5, 10, 20, 50, 100, 200],  # min_length
-        ["rp"]  # interval_type
+        [5, 10, 20, 50, 100, 200, 500],  # min_length
+        [5, 10, 20, 50, 100, 200, 500, 700, np.inf],  # max_length
+        [None, "reverse_fill"]  # interval_type
     ]
 
     parameters_p = [
-        [100, 200, 500, 1000, 5000],  # n_trees
+        [100, 500, 1000, 5000],  # n_trees
         [3, 5, 10, 20, 50, 100, 200],  # n_interval
-        [.05, .10, .20, .30, .50, .70],  # min_length
-        ["p"]  # interval_type
+        [.05, .10, .25, .50, .70],  # min_length
+        [.05, .10, .25, .50, .70, .8, 1.],  # max_length
+        ["percentage"]  # interval_type
     ]
 
-    parameters_names = ["n_trees", "n_interval", "min_length", "interval_type"]
+    parameters_names = ["n_trees", "n_interval", "min_length", "max_length", "interval_type"]
 
     pbar_dataset = tqdm(datasets, position=0, leave=False)
     for dataset in pbar_dataset:
@@ -59,7 +61,8 @@ if __name__ == "__main__":
         dataset_name = dataset.split('\\')[-1].split('/')[-1]
         pbar_dataset.set_description(f"Dataset name: {dataset_name}")
 
-        df[["c1", "c2"]] = df[["c1", "c2"]] / 100000
+        if "vehicle" in dataset_name:
+            df[["c1", "c2"]] = df[["c1", "c2"]] / 100000
 
         tid_train, tid_test, _, _ = train_test_split(df.groupby(by=["tid"]).max().reset_index()["tid"],
                                                      df.groupby(by=["tid"]).max().reset_index()["class"],
@@ -70,7 +73,7 @@ if __name__ == "__main__":
         id_train, classe_train, lat_train, lon_train, time_train = preare(df, tid_train)
         id_test, classe_test, lat_test, lon_test, time_test = preare(df, tid_test)
 
-        pool = ProcessPoolExecutor(max(1, psutil.cpu_count(logical=True)))
+        pool = ProcessPoolExecutor(max(1, psutil.cpu_count(logical=False)))
 
         par = list(itertools.product(*parameters_rp)) + list(itertools.product(*parameters_p))
 
@@ -95,9 +98,9 @@ if __name__ == "__main__":
             f1 = f1_score(classe_test, y_pred, average="micro")
             recall = recall_score(classe_test, y_pred, average="micro")
 
-            result_all.append(list(els)+[time, accuracy, f1, recall])
+            result_all.append([dataset_name] + list(els)+[time, accuracy, f1, recall])
         pd.DataFrame(result_all,
-                     columns=parameters_names + ["time", "accuracy", "f1", "recall"], index=None)\
+                     columns=["dataset_name"] + parameters_names + ["time", "accuracy", "f1", "recall"], index=None)\
             .to_csv("results/"+dataset_name+" - features.csv")
 
 
