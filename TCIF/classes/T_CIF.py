@@ -22,6 +22,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
         self.min_length = min_length
         self.max_length = max_length
         self.interval_type = interval_type
+        self.n_jobs = n_jobs
         self.seed = seed
         self.verbose = verbose
 
@@ -58,7 +59,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
         self.starts, self.stops = self.generate_intervals()
 
         self.clf = RandomForestClassifier(n_estimators=self.n_trees, max_depth=2, bootstrap=False,
-                                          random_state=self.seed)
+                                          random_state=self.seed, n_jobs=self.n_jobs)
 
         self.clf.fit(self._transform(X, self.starts, self.stops), y)
 

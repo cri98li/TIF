@@ -22,7 +22,7 @@ def run(els, lat_train, lon_train, time_train, lat_test, lon_test, time_test, cl
         return [None, None]
 
     tcif = T_CIF_features(n_trees=els[0], n_interval=els[1], min_length=els[2], max_length=els[3], interval_type=els[4],
-                          n_jobs=psutil.cpu_count(logical=False), verbose=False)
+                          n_jobs=psutil.cpu_count(logical=True), verbose=False)
 
     train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
     test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]

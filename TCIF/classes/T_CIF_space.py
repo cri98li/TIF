@@ -86,21 +86,22 @@ class T_CIF_space(T_CIF):
         )
 
         if key not in self.X_distance_dict:
-            self.X_distance_dict[key] = distance(X_row[0], X_row[1]).sum()
+            self.X_distance_dict[key] = distance(X_row[0], X_row[1])
+        else: print("hit")
 
         X_distance = self.X_distance_dict[key]
 
         if self.interval_type in [None, "percentage"]:
 
             if self.interval_type == "percentage":
-                start = X_distance * start
-                stop = X_distance * stop
+                start = X_distance.sum() * start
+                stop = X_distance.sum() * stop
 
             start_idx = None
             stop_idx = None
 
             cum_dist = 0
-            for idx, dist in enumerate(distance(X_row[0], X_row[1])):
+            for idx, dist in enumerate(X_distance):
                 cum_dist += dist
                 if cum_dist >= start and start_idx is None:
                     start_idx = idx
@@ -126,6 +127,8 @@ class T_CIF_space(T_CIF):
                 X_row[2]
             )
 
+            X_distance_clone = np.copy(X_distance)
+
             subsequence_space = 0
 
             while subsequence_space < stop \
@@ -134,7 +137,7 @@ class T_CIF_space(T_CIF):
                 for it, (lat, lon, time, dist) in enumerate(zip(X_row_clone[0],
                                                                      X_row_clone[1],
                                                                      X_row_clone[2],
-                                                                     distance(X_row_clone[0], X_row_clone[1]))):
+                                                                     X_distance_clone)):
 
                     if subsequence_space < start:
                         subsequence_space += dist
@@ -158,6 +161,8 @@ class T_CIF_space(T_CIF):
                     np.flip(X_row_clone[1]),
                     np.flip(X_row_clone[2])
                 )
+
+                X_distance_clone = np.flip(X_distance_clone)
 
             if len(return_value[0]) == 0:
                 print("HERE")

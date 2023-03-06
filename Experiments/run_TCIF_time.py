@@ -22,7 +22,7 @@ def run(els, lat_train, lon_train, time_train, lat_test, lon_test, time_test, cl
     if els[2] > els[3]:
         return [None, None]
     tcif = T_CIF_time(n_trees=els[0], n_interval=els[1], min_length=els[2], max_length=els[3], interval_type=els[4],
-                      n_jobs=psutil.cpu_count(logical=False), verbose=False)
+                      n_jobs=psutil.cpu_count(logical=True), verbose=False)
 
     train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
     test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
@@ -43,20 +43,20 @@ if __name__ == "__main__":
     parameters_rp = [
         [100, 500, 1000, 5000],  # n_trees
         [3, 5, 10, 20, 50, 100, 200],  # n_interval
-        [5, 10, 20, 50, 100, 200, 500],  # min_length
-        [5, 10, 20, 50, 100, 200, 500, 700, np.inf],  # max_length
+        [5, 10, 20, 50, 100, 200],  # min_length
+        [5, 10, 20, 50, 100, 200, 500, np.inf],  # max_length
         [None, "reverse_fill"]  # interval_type
     ]
 
     parameters_p = [
         [100, 500, 1000, 5000],  # n_trees
         [3, 5, 10, 20, 50, 100, 200],  # n_interval
-        [.05, .10, .25, .50, .70],  # min_length
-        [.05, .10, .25, .50, .70, .8, 1.],  # max_length
+        [.05, .10, .25, .50, .75],  # min_length
+        [.05, .10, .25, .50, .75, 1.],  # max_length
         ["percentage"]  # interval_type
     ]
 
-    parameters_names = ["n_trees", "n_interval", "min_length"]
+    parameters_names = ["n_trees", "n_interval", "min_length", "max_length", "interval_type"]
 
     pbar_dataset = tqdm(datasets, position=0, leave=False)
     for dataset in pbar_dataset:
