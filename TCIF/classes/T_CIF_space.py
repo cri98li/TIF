@@ -87,7 +87,7 @@ class T_CIF_space(T_CIF):
 
         if key not in self.X_distance_dict:
             self.X_distance_dict[key] = distance(X_row[0], X_row[1])
-        else: print("hit")
+        #else: print("hit")
 
         X_distance = self.X_distance_dict[key]
 
