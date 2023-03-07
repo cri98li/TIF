@@ -58,7 +58,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
 
         self.starts, self.stops = self.generate_intervals()
 
-        self.clf = RandomForestClassifier(n_estimators=self.n_trees, max_depth=2, bootstrap=False,
+        self.clf = RandomForestClassifier(n_estimators=self.n_trees, max_depth=10, bootstrap=False,
                                           random_state=self.seed, n_jobs=self.n_jobs)
 
         self.clf.fit(self._transform(X, self.starts, self.stops), y)
@@ -117,4 +117,10 @@ def _transform_inner_loop(X, starts, stops, tipo, min_length, interval_type):
         feature.append([np.nan_to_num(sf.meanSquaredDisplacement(X_lat_sub, X_lon_sub))])
         feature.append([np.nan_to_num(sf.intensityUse(X_lat_sub, X_lon_sub))])
         feature.append([np.nan_to_num(sf.sinuosity(X_lat_sub, X_lon_sub))])
+
+    for f in feature:
+        if len(f) == 0:
+            print("HERE")
+        if np.isnan(f[0]).all() or not np.isfinite(f[0]).all():
+            print("HERE")
     return feature
