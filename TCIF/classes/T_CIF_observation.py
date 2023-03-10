@@ -6,7 +6,7 @@ import numpy as np
 from TCIF.classes.T_CIF import T_CIF
 
 
-class T_CIF_features(T_CIF):
+class T_CIF_observations(T_CIF):
 
     # interval types: {None: [a:b] or [0] if a > len(trj), percentage: percentage, reverse_fill: if a | b > len(trj),
     # reverse trj}

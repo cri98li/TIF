@@ -41,12 +41,17 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
     def get_subset(self, X_row, start, stop):
         pass
 
-    def _transform(self, X, starts, stops):
+    def transform(self, X):
+        self.X = X
+
+        if self.starts is None:
+            self.starts, self.stops = self.generate_intervals()
+
         features = []
 
         # for (X_lat, X_lon, X_time) in tqdm(X, disable=not self.verbose, desc="Processing TS", leave=False,
         # position=0):
-        for feature in tqdm(self.executor.map(_transform_inner_loop, X, repeat(starts), repeat(stops),
+        for feature in tqdm(self.executor.map(_transform_inner_loop, X, repeat(self.starts), repeat(self.stops),
                                          repeat(str(type(self))), repeat(self.min_length), repeat(self.interval_type),
                                          ), total=len(X), disable=not self.verbose):
             features.append(feature)
@@ -56,17 +61,18 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
     def fit(self, X, y):  # list of triplets (lat, lon, time)
         self.X = X
 
-        self.starts, self.stops = self.generate_intervals()
+        if self.starts is None:
+            self.starts, self.stops = self.generate_intervals()
 
         self.clf = RandomForestClassifier(n_estimators=self.n_trees, max_depth=10, bootstrap=False,
                                           random_state=self.seed, n_jobs=self.n_jobs)
 
-        self.clf.fit(self._transform(X, self.starts, self.stops), y)
+        self.clf.fit(self.transform(X), y)
 
         return self
 
     def predict(self, X):
-        return self.clf.predict(self._transform(X, self.starts, self.stops))
+        return self.clf.predict(self.transform(X))
 
     @abstractmethod
     def print_sections(self):
@@ -87,8 +93,8 @@ def _transform_inner_loop(X, starts, stops, tipo, min_length, interval_type):
         from TCIF.classes.T_CIF_space import T_CIF_space
         get_subset = T_CIF_space(None, None, min_length, interval_type=interval_type).get_subset
     else:
-        from TCIF.classes.T_CIF_features import T_CIF_features
-        get_subset = T_CIF_features(None, None, min_length, interval_type=interval_type).get_subset
+        from TCIF.classes.T_CIF_observation import T_CIF_observations
+        get_subset = T_CIF_observations(None, None, min_length, interval_type=interval_type).get_subset
 
     feature = []
     for start, stop in tqdm(list(zip(starts, stops)), disable=not verbose, desc="Processing interval",

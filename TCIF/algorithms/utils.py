@@ -2,7 +2,7 @@ import numpy as np
 from tqdm.auto import tqdm
 
 
-def preare(df, tid_list, verbose=True):
+def prepare(df, tid_list, verbose=True):
     id = []
     lat = []
     lon = []
