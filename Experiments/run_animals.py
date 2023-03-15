@@ -12,13 +12,22 @@ def _prepare_dataset():
 
     tid_train, tid_test, _, _ = train_test_split(df.groupby(by=["tid"]).max().reset_index()["tid"],
                                                  df.groupby(by=["tid"]).max().reset_index()["class"],
-                                                 test_size=.3,
+                                                 test_size=.2,
                                                  stratify=df.groupby(by=["tid"]).max().reset_index()["class"],
                                                  random_state=3)
 
+    df_train = df[df.tid.isin(tid_train)]
+
+    tid_train, tid_validation, _, _ = train_test_split(df_train.groupby(by=["tid"]).max().reset_index()["tid"],
+                                                 df_train.groupby(by=["tid"]).max().reset_index()["class"],
+                                                 test_size=.2,
+                                                 stratify=df_train.groupby(by=["tid"]).max().reset_index()["class"],
+                                                 random_state=3)
+
     train = prepare(df, tid_train, verbose=False)
+    validation = prepare(df, tid_validation, verbose=False)
     test = prepare(df, tid_test, verbose=False)
-    return train, test
+    return train, validation, test
 
 
 def generate_obs():
