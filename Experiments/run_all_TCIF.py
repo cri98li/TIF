@@ -68,8 +68,8 @@ def compute_scores(y_true, y_pred):
     return ["accuracy", "f1_micro", "f1_macro", "precision_micro", "precision_macro", "recall_micro", "recall_macro"], \
         [accuracy, f1_micro, f1_macro, precision_micro, precision_macro, recall_micro, recall_macro]
 
-def train_models(filename, arg, args_names, train_transformed, classe_train, test_transformed, classe_test,
-                 t_feature_extr):
+def train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed, classe_validation,
+                 test_transformed, classe_test, t_feature_extr):
     # Random forest
     bar = tqdm(list(itertools.product(*parameters_randomForest.copy())), desc="Training Random Forest", position=2, leave=False)
     for n_estimators, max_depth, bootstrap in bar:
@@ -83,13 +83,27 @@ def train_models(filename, arg, args_names, train_transformed, classe_train, tes
         clf.fit(train_transformed, classe_train)
         total_time = (datetime.now() - start).total_seconds() + t_feature_extr
 
-        classe_predicted = clf.predict(test_transformed)
+        classe_predicted_validation = clf.predict(validation_transformed)
+        classe_predicted_test = clf.predict(test_transformed)
 
-        performance_names, performance = compute_scores(classe_test, classe_predicted)
+        performance_names, performance_validation = compute_scores(classe_validation, classe_predicted_validation)
+        _, performance_test = compute_scores(classe_test, classe_predicted_test)
 
         pd.DataFrame(
-            [[n_estimators, max_depth, bootstrap] + list(arg) + performance + [total_time]],
-            columns=parameters_randomForest_names + args_names + performance_names + ["total_time"]
+            [
+                [n_estimators, max_depth, bootstrap] +
+                list(arg) +
+                performance_validation +
+                performance_test +
+                [total_time]
+            ],
+
+            columns=
+            parameters_randomForest_names +
+            args_names +
+            [f"validation_{x}" for x in performance_names] +
+            [f"test_{x}" for x in performance_names] +
+            ["total_time"]
         ).to_csv("results/" + complete_filename, index=False)
 
     #lightgbm
@@ -106,13 +120,27 @@ def train_models(filename, arg, args_names, train_transformed, classe_train, tes
         clf.fit(train_transformed, classe_train)
         total_time = (datetime.now() - start).total_seconds() + t_feature_extr
 
-        classe_predicted = clf.predict(test_transformed)
+        classe_predicted_validation = clf.predict(validation_transformed)
+        classe_predicted_test = clf.predict(test_transformed)
 
-        performance_names, performance = compute_scores(classe_test, classe_predicted)
+        performance_names, performance_validation = compute_scores(classe_validation, classe_predicted_validation)
+        _, performance_test = compute_scores(classe_test, classe_predicted_test)
 
         pd.DataFrame(
-            [[n_estimators, learning_rate, objective] + list(arg) + performance + [total_time]],
-            columns=parameters_lightgbm_names + args_names + performance_names + ["total_time"]
+            [
+                [n_estimators, learning_rate, objective] +
+                list(arg) +
+                performance_validation +
+                performance_test +
+                [total_time]
+            ],
+
+            columns=
+            parameters_lightgbm_names +
+            args_names +
+            [f"validation_{x}" for x in performance_names] +
+            [f"test_{x}" for x in performance_names] +
+            ["total_time"]
         ).to_csv("results/" + complete_filename, index=False)
 
     # linearTree
@@ -129,16 +157,30 @@ def train_models(filename, arg, args_names, train_transformed, classe_train, tes
         clf.fit(train_transformed, classe_train)
         total_time = (datetime.now() - start).total_seconds() + t_feature_extr
 
-        classe_predicted = clf.predict(test_transformed)
+        classe_predicted_validation = clf.predict(validation_transformed)
+        classe_predicted_test = clf.predict(test_transformed)
 
-        performance_names, performance = compute_scores(classe_test, classe_predicted)
+        performance_names, performance_validation = compute_scores(classe_validation, classe_predicted_validation)
+        _, performance_test = compute_scores(classe_test, classe_predicted_test)
 
         pd.DataFrame(
-            [[base_estimator, max_depth, criterion, max_bins] + list(arg) + performance + [total_time]],
-            columns=parameters_linearTree_names+ args_names + performance_names + ["total_time"]
+            [
+                [base_estimator, max_depth, criterion, max_bins] +
+                list(arg) +
+                performance_validation +
+                performance_test +
+                [total_time]
+            ],
+
+            columns=
+            parameters_linearTree_names +
+            args_names +
+            [f"validation_{x}" for x in performance_names] +
+            [f"test_{x}" for x in performance_names] +
+            ["total_time"]
         ).to_csv("results/" + complete_filename, index=False)
 
-def run_obs(train_unpack, test_unpack, args, args_names, dataset_name):
+def run_obs(train_unpack, validation_unpack, test_unpack, args, args_names, dataset_name):
     bar = tqdm(args, position=1, leave=False)
     for arg in bar:
         filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
@@ -148,8 +190,10 @@ def run_obs(train_unpack, test_unpack, args, args_names, dataset_name):
                                   seed=arg[4], verbose=False)
 
         id_train, classe_train, lat_train, lon_train, time_train = train_unpack
+        id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
         id_test, classe_test, lat_test, lon_test, time_test = test_unpack
         train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
+        validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
         test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
 
         try:
@@ -160,16 +204,17 @@ def run_obs(train_unpack, test_unpack, args, args_names, dataset_name):
             #print(e)
             continue
 
+        validation_transformed = tcif.transform(validation)
         test_transformed = tcif.transform(test)
 
-        train_models(filename, arg, args_names, train_transformed, classe_train, test_transformed, classe_test,
-                     t_feature_extr)
+        train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
+                     classe_validation, test_transformed, classe_test, t_feature_extr)
 
 
 
 
 
-def run_time(train_unpack, test_unpack, args, args_names, dataset_name):
+def run_time(train_unpack, validation_unpack, test_unpack, args, args_names, dataset_name):
     bar = tqdm(args, position=1, leave=False)
     for arg in bar:
         filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
@@ -179,8 +224,10 @@ def run_time(train_unpack, test_unpack, args, args_names, dataset_name):
                                   seed=arg[4], verbose=False)
 
         id_train, classe_train, lat_train, lon_train, time_train = train_unpack
+        id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
         id_test, classe_test, lat_test, lon_test, time_test = test_unpack
         train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
+        validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
         test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
 
         try:
@@ -188,16 +235,17 @@ def run_time(train_unpack, test_unpack, args, args_names, dataset_name):
             train_transformed = tcif.transform(train)
             t_feature_extr = (datetime.now() - start).total_seconds()
         except Exception as e:
-            print(e)
+            # print(e)
             continue
 
+        validation_transformed = tcif.transform(validation)
         test_transformed = tcif.transform(test)
 
-        train_models(filename, arg, args_names, train_transformed, classe_train, test_transformed, classe_test,
-                     t_feature_extr)
+        train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
+                     classe_validation, test_transformed, classe_test, t_feature_extr)
 
 
-def run_space(train_unpack, test_unpack, args, args_names, dataset_name):
+def run_space(train_unpack, validation_unpack, test_unpack, args, args_names, dataset_name):
     bar = tqdm(args, position=1, leave=False)
     for arg in bar:
         filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
@@ -207,8 +255,10 @@ def run_space(train_unpack, test_unpack, args, args_names, dataset_name):
                                   seed=arg[4], verbose=False)
 
         id_train, classe_train, lat_train, lon_train, time_train = train_unpack
+        id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
         id_test, classe_test, lat_test, lon_test, time_test = test_unpack
         train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
+        validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
         test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
 
         try:
@@ -216,13 +266,14 @@ def run_space(train_unpack, test_unpack, args, args_names, dataset_name):
             train_transformed = tcif.transform(train)
             t_feature_extr = (datetime.now() - start).total_seconds()
         except Exception as e:
-            #print(e)
+            # print(e)
             continue
 
+        validation_transformed = tcif.transform(validation)
         test_transformed = tcif.transform(test)
 
-        train_models(filename, arg, args_names, train_transformed, classe_train, test_transformed, classe_test,
-                     t_feature_extr)
+        train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
+                     classe_validation, test_transformed, classe_test, t_feature_extr)
 
 
 if __name__ == '__main__':
@@ -234,17 +285,17 @@ if __name__ == '__main__':
         bar_exp = tqdm(range(3), position=1, leave=False)
 
         bar_exp.set_description("Running TCIF-obs")
-        par, parameters_names, (train, test) = module.generate_obs()
-        run_obs(train, test, par, parameters_names, dataset_name)
+        par, parameters_names, (train, validation, test) = module.generate_obs()
+        run_obs(train, validation, test, par, parameters_names, dataset_name)
         bar.update(1)
 
         bar_exp.set_description("Running TCIF-time")
-        par, parameters_names, (train, test) = module.generate_time()
-        run_time(train, test, par, parameters_names, dataset_name)
+        par, parameters_names, (train, validation, test) = module.generate_time()
+        run_time(train, validation, test, par, parameters_names, dataset_name)
         bar.update(2)
 
         bar_exp.set_description("Running TCIF-time")
-        par, parameters_names, (train, test) = module.generate_space()
-        run_space(train, test, par, parameters_names, dataset_name)
+        par, parameters_names, (train, validation, test) = module.generate_space()
+        run_space(train, validation, test, par, parameters_names, dataset_name)
         bar.update(3)
 
