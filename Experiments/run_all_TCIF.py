@@ -16,6 +16,7 @@ import lightgbm as lgb
 from TCIF.classes.T_CIF_observation import T_CIF_observations
 
 import run_animals as animals
+import run_vehicles as vehicles
 
 import psutil
 
@@ -27,7 +28,8 @@ from TCIF.classes.T_CIF_time import T_CIF_time
 warnings.filterwarnings('ignore')
 
 modules = {
-    "animals": animals
+    #"animals": animals,
+    "vehicles": vehicles
 }
 
 parameters_randomForest_names = ["n_estimators", "max_depth", "bootstrap"]
@@ -109,6 +111,8 @@ def train_models(filename, arg, args_names, train_transformed, classe_train, val
     #lightgbm
     bar = tqdm(list(itertools.product(*parameters_lightgbm.copy())), desc="Training lightgbm", position=2, leave=False)
     for n_estimators, learning_rate, objective in bar:
+        if len(set(classe_train)) == 2:
+            objective = "binary"
         complete_filename = f"LGBM!{n_estimators}_{learning_rate}_{objective}!{filename}"
         if os.path.exists("results/" + complete_filename):
             continue
@@ -144,7 +148,7 @@ def train_models(filename, arg, args_names, train_transformed, classe_train, val
         ).to_csv("results/" + complete_filename, index=False)
 
     # linearTree
-    bar = tqdm(list(itertools.product(*parameters_linearTree.copy())), desc="Training LinearTree", position=2, leave=False)
+    """bar = tqdm(list(itertools.product(*parameters_linearTree.copy())), desc="Training LinearTree", position=2, leave=False)
     for base_estimator, max_depth, criterion, max_bins in bar:
         complete_filename = f"LinTree!{str(base_estimator)}_{max_depth}_{criterion}_{max_bins}!{filename}"
         if os.path.exists("results/" + complete_filename):
@@ -178,7 +182,7 @@ def train_models(filename, arg, args_names, train_transformed, classe_train, val
             [f"validation_{x}" for x in performance_names] +
             [f"test_{x}" for x in performance_names] +
             ["total_time"]
-        ).to_csv("results/" + complete_filename, index=False)
+        ).to_csv("results/" + complete_filename, index=False)"""
 
 def run_obs(train_unpack, validation_unpack, test_unpack, args, args_names, dataset_name):
     bar = tqdm(args, position=1, leave=False)

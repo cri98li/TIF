@@ -3,12 +3,15 @@ import itertools
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
 from TCIF.algorithms.utils import prepare
 
 
 def _prepare_dataset():
-    df = pd.read_csv("datasets/animals.zip")
+    df = pd.read_csv("datasets/vehicles.zip")
+
+    #df["class"] = LabelEncoder().fit_transform(df["class"])
 
     tid_train, tid_test, _, _ = train_test_split(df.groupby(by=["tid"]).max().reset_index()["tid"],
                                                  df.groupby(by=["tid"]).max().reset_index()["class"],
@@ -36,7 +39,7 @@ def generate_obs():
         [5, 10, 20, 50, 100, 200],  # min_length
         [5, 10, 20, 50, 100, 200, 500, np.inf],  # max_length
         [None, "reverse_fill"],  # interval_type
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # seed
+        [1, 2, 3, 4, 5],  # seed
     ]
 
     parameters_p = [
@@ -44,7 +47,7 @@ def generate_obs():
         [.05, .10, .25, .50,],  # min_length
         [.05, .10, .25, .50, .75, 1.],  # max_length
         ["percentage"],  # interval_type
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # seed
+        [1, 2, 3, 4, 5],  # seed
     ]
 
     parameters_names = ["n_interval", "min_length", "max_length", "interval_type", "seed"]
@@ -61,7 +64,7 @@ def generate_time():
         [5, 10, 20, 50, 100],  # min_length
         [5, 10, 20, 50, 100, 200, np.inf],  # max_length
         [None, "reverse_fill"],  # interval_type
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # seed
+        [1, 2, 3, 4, 5],  # seed
     ]
 
     parameters_p = [
@@ -69,7 +72,7 @@ def generate_time():
         [.05, .10, .25, .50],  # min_length
         [.05, .10, .25, .50, .75, 1.],  # max_length
         ["percentage"],  # interval_type
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # seed
+        [1, 2, 3, 4, 5],  # seed
     ]
 
     parameters_names = ["n_interval", "min_length", "max_length", "interval_type", "seed"]
@@ -86,7 +89,7 @@ def generate_space():
         [500, 1000, 5000, 20000],  # min_length
         [500, 1000, 5000, 20000, 50000, np.inf],  # max_length
         [None, "reverse_fill"],  # interval_type
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # seed
+        [1, 2, 3, 4, 5],  # seed
     ]
 
     parameters_p = [
@@ -94,7 +97,7 @@ def generate_space():
         [.05, .10, .25, .50],  # min_length
         [.05, .10, .25, .50, .75, 1.],  # max_length
         ["percentage"],  # interval_type
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # seed
+        [1, 2, 3, 4, 5],  # seed
     ]
 
     parameters_names = ["n_interval", "min_length", "max_length", "interval_type", "seed"]
