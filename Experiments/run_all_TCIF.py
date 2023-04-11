@@ -34,7 +34,7 @@ modules = {
 
 parameters_randomForest_names = ["n_estimators", "max_depth", "bootstrap"]
 parameters_randomForest = [
-    [20, 50, 100, 500, 1000],  # n_estimators
+    [20, 100, 500, 1000],  # n_estimators
     [2, 3, 4, 5, 10, 15, 20],  # max_depth
     [True, False],  # bootstrap (False per TCIF)
 ]
@@ -42,8 +42,8 @@ parameters_randomForest = [
 
 parameters_lightgbm_names = ["n_estimators", "learning_rate", "objective"]
 parameters_lightgbm = [
-    [20, 50, 100, 500, 1000],  # n_estimators
-    [0.01, 0.05, 0.1, 0.2, 1],  # learning_rate
+    [20, 100, 500, 1000],  # n_estimators
+    [0.01, 0.05, 0.1, 0.2],  # learning_rate
     ["multiclassova"],  # objective
 ]
 
@@ -187,33 +187,35 @@ def train_models(filename, arg, args_names, train_transformed, classe_train, val
 def run_obs(train_unpack, validation_unpack, test_unpack, args, args_names, dataset_name):
     bar = tqdm(args, position=1, leave=False)
     for arg in bar:
-        filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
-        bar.set_description(filename)
-
-        tcif = T_CIF_observations(None, arg[0], arg[1], arg[2], arg[3], n_jobs=psutil.cpu_count(logical=False),
-                                  seed=arg[4], verbose=False)
-
-        id_train, classe_train, lat_train, lon_train, time_train = train_unpack
-        id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
-        id_test, classe_test, lat_test, lon_test, time_test = test_unpack
-        train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
-        validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
-        test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
-
         try:
-            start = datetime.now()
-            train_transformed = tcif.transform(train)
-            t_feature_extr = (datetime.now() - start).total_seconds()
-        except Exception as e:
-            #print(e)
-            continue
+            filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
+            bar.set_description(filename)
 
-        validation_transformed = tcif.transform(validation)
-        test_transformed = tcif.transform(test)
+            tcif = T_CIF_observations(None, arg[0], arg[1], arg[2], arg[3], n_jobs=psutil.cpu_count(logical=False),
+                                      seed=arg[4], verbose=False)
 
-        train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
-                     classe_validation, test_transformed, classe_test, t_feature_extr)
+            id_train, classe_train, lat_train, lon_train, time_train = train_unpack
+            id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
+            id_test, classe_test, lat_test, lon_test, time_test = test_unpack
+            train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
+            validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
+            test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
 
+            try:
+                start = datetime.now()
+                train_transformed = tcif.transform(train)
+                t_feature_extr = (datetime.now() - start).total_seconds()
+            except Exception as e:
+                #print(e)
+                continue
+
+            validation_transformed = tcif.transform(validation)
+            test_transformed = tcif.transform(test)
+
+            train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
+                         classe_validation, test_transformed, classe_test, t_feature_extr)
+        except:
+            pass
 
 
 
@@ -221,63 +223,69 @@ def run_obs(train_unpack, validation_unpack, test_unpack, args, args_names, data
 def run_time(train_unpack, validation_unpack, test_unpack, args, args_names, dataset_name):
     bar = tqdm(args, position=1, leave=False)
     for arg in bar:
-        filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
-        bar.set_description(filename)
-
-        tcif = T_CIF_time(None, arg[0], arg[1], arg[2], arg[3], n_jobs=psutil.cpu_count(logical=False),
-                                  seed=arg[4], verbose=False)
-
-        id_train, classe_train, lat_train, lon_train, time_train = train_unpack
-        id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
-        id_test, classe_test, lat_test, lon_test, time_test = test_unpack
-        train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
-        validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
-        test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
-
         try:
-            start = datetime.now()
-            train_transformed = tcif.transform(train)
-            t_feature_extr = (datetime.now() - start).total_seconds()
-        except Exception as e:
-            # print(e)
-            continue
+            filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
+            bar.set_description(filename)
 
-        validation_transformed = tcif.transform(validation)
-        test_transformed = tcif.transform(test)
+            tcif = T_CIF_time(None, arg[0], arg[1], arg[2], arg[3], n_jobs=psutil.cpu_count(logical=False),
+                                      seed=arg[4], verbose=False)
 
-        train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
-                     classe_validation, test_transformed, classe_test, t_feature_extr)
+            id_train, classe_train, lat_train, lon_train, time_train = train_unpack
+            id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
+            id_test, classe_test, lat_test, lon_test, time_test = test_unpack
+            train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
+            validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
+            test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
+
+            try:
+                start = datetime.now()
+                train_transformed = tcif.transform(train)
+                t_feature_extr = (datetime.now() - start).total_seconds()
+            except Exception as e:
+                # print(e)
+                continue
+
+            validation_transformed = tcif.transform(validation)
+            test_transformed = tcif.transform(test)
+
+            train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
+                         classe_validation, test_transformed, classe_test, t_feature_extr)
+        except:
+            pass
 
 
 def run_space(train_unpack, validation_unpack, test_unpack, args, args_names, dataset_name):
     bar = tqdm(args, position=1, leave=False)
     for arg in bar:
-        filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
-        bar.set_description(filename)
-
-        tcif = T_CIF_space(None, arg[0], arg[1], arg[2], arg[3], n_jobs=psutil.cpu_count(logical=False),
-                                  seed=arg[4], verbose=False)
-
-        id_train, classe_train, lat_train, lon_train, time_train = train_unpack
-        id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
-        id_test, classe_test, lat_test, lon_test, time_test = test_unpack
-        train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
-        validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
-        test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
-
         try:
-            start = datetime.now()
-            train_transformed = tcif.transform(train)
-            t_feature_extr = (datetime.now() - start).total_seconds()
-        except Exception as e:
-            # print(e)
-            continue
+            filename = f"OBS!{dataset_name}!{'_'.join([str(x) for x in arg])}.csv"
+            bar.set_description(filename)
 
-        validation_transformed = tcif.transform(validation)
-        test_transformed = tcif.transform(test)
+            tcif = T_CIF_space(None, arg[0], arg[1], arg[2], arg[3], n_jobs=psutil.cpu_count(logical=False),
+                                      seed=arg[4], verbose=False)
 
-        train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
-                     classe_validation, test_transformed, classe_test, t_feature_extr)
+            id_train, classe_train, lat_train, lon_train, time_train = train_unpack
+            id_validation, classe_validation, lat_validation, lon_validation, time_validation = validation_unpack
+            id_test, classe_test, lat_test, lon_test, time_test = test_unpack
+            train = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_train, lon_train, time_train)]
+            validation = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_validation, lon_validation, time_validation)]
+            test = [(_lat, _lon, _time) for _lat, _lon, _time in zip(lat_test, lon_test, time_test)]
+
+            try:
+                start = datetime.now()
+                train_transformed = tcif.transform(train)
+                t_feature_extr = (datetime.now() - start).total_seconds()
+            except Exception as e:
+                # print(e)
+                continue
+
+            validation_transformed = tcif.transform(validation)
+            test_transformed = tcif.transform(test)
+
+            train_models(filename, arg, args_names, train_transformed, classe_train, validation_transformed,
+                         classe_validation, test_transformed, classe_test, t_feature_extr)
+        except:
+            pass
 
 
 if __name__ == '__main__':

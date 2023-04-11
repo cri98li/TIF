@@ -53,9 +53,9 @@ if __name__ == "__main__":
     #tcif = T_CIF_features(n_trees=1000, n_interval=20, min_length=10, interval_type="reverse_fill", n_jobs=12, verbose=True)
     #tcif = T_CIF_features(n_trees=1000, n_interval=20, min_length=.05, max_length=.5, interval_type="percentage", n_jobs=12, verbose=True)
 
-    tcif = T_CIF_time(n_trees=1000, n_interval=50, min_length=.05, interval_type="percentage", n_jobs=24, verbose=True)
+    #tcif = T_CIF_time(n_trees=1000, n_interval=50, min_length=.05, interval_type="percentage", n_jobs=24, verbose=True)
     #tcif = T_CIF_time(n_trees=1000, n_interval=50, min_length=10, interval_type=None, n_jobs=12, verbose=True)
-    #tcif = T_CIF_time(n_trees=1000, n_interval=50, min_length=10, interval_type="reverse_fill", n_jobs=12, verbose=True)
+    tcif = T_CIF_time(n_trees=1000, n_interval=50, min_length=10, interval_type="fill", n_jobs=12, verbose=True)
 
     #tcif = T_CIF_space(n_trees=1000, n_interval=50, min_length=.05, interval_type="percentage", n_jobs=12, verbose=True)
     #tcif = T_CIF_space(n_trees=1000, n_interval=50, min_length=10, interval_type=None, n_jobs=12, verbose=True)

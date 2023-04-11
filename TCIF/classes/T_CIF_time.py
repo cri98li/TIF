@@ -27,7 +27,7 @@ class T_CIF_time(T_CIF):
         if verbose:
             print(f"{interval_type}, min:{min_length}, max:{max_length}", flush=True)
 
-        if interval_type is None:
+        if interval_type is None or interval_type in ["reverse_fill", "fill"]:
             if type(min_length) != int or (type(max_length) != int and max_length != np.inf):
                 raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
                                  f"interval_type={interval_type}. Please use min_length=int and None=[int or inf]")
@@ -37,10 +37,6 @@ class T_CIF_time(T_CIF):
                 raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
                                  f"interval_type={interval_type}. Please use min_length=float and None=[float or inf]")
 
-        elif interval_type == "reverse_fill":
-            if type(min_length) != int or (type(max_length) != int and max_length != np.inf):
-                raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
-                                 f"interval_type={interval_type}. Please use min_length=int and None=[int or inf]")
         else:
             raise ValueError(f"interval_type={interval_type} unsupported. supported interval types: [None, percentage, "
                              f"reverse_fill]")
@@ -53,7 +49,7 @@ class T_CIF_time(T_CIF):
         self.max_t = int(max([max(x[2]) for x in self.X]))
         self.min_t = int(min([min(x[2]) for x in self.X]))
 
-        if self.interval_type in [None, "reverse_fill"]:
+        if self.interval_type in [None, "reverse_fill", "fill"]:
             starting_p = random.sample(range(self.min_t, self.max_t - self.min_length), self.n_interval)
             ending_p = []
             for p in starting_p:
@@ -148,6 +144,49 @@ class T_CIF_time(T_CIF):
 
             if len(return_value[0]) == 0:
                 print("HERE")
+
+            return (
+                np.array(return_value[0]),
+                np.array(return_value[1]),
+                np.array(return_value[2]),
+            )
+
+        elif self.interval_type == "fill":
+            X_row_clone = (
+                X_row[0],
+                X_row[1],
+                X_row[2]
+            )
+
+            base_lat = X_row_clone[0][0]
+            base_lon = X_row_clone[1][0]
+            base_time = X_row_clone[2][0]
+
+            return_value = ([base_lat], [base_lon], [base_time])
+
+            X_row_clone = (X_row_clone[0][1:] - base_lat, X_row_clone[1][1:] - base_lon, X_row_clone[2][1:] - base_time)
+
+            subsequence_time = 0
+
+            while subsequence_time < stop or len(return_value[0]) == 0:
+                # special case: at least 1 element -> in the case that delta_time > stop-start
+                for it, (lat, lon, time, time_prec) in enumerate(zip(X_row_clone[0],
+                                                        X_row_clone[1],
+                                                        X_row_clone[2],
+                                                        X_row_clone[2])):
+                    return_value[0].append(
+                        base_lat + lat + X_row_clone[0][-1] * (len(return_value[0]) // len(return_value[0])))
+                    return_value[1].append(
+                        base_lon + lon + X_row_clone[1][-1] * (len(return_value[1]) // len(return_value[0])))
+                    return_value[2].append(
+                        base_time + time + X_row_clone[2][-1] * (len(return_value[2]) // len(return_value[0])))
+
+                    subsequence_time += time + return_value[2][-1]
+
+                    if subsequence_time >= stop and len(return_value[0]) > 0:
+                        # special case: at least 1 element -> in the case that delta_time > stop-start
+                        break
+
 
             return (
                 np.array(return_value[0]),

@@ -38,7 +38,7 @@ def generate_obs():
         [3, 5, 10, 20, 50, 100],  # n_interval
         [5, 10, 20, 50, 100, 200],  # min_length
         [5, 10, 20, 50, 100, 200, 500, np.inf],  # max_length
-        [None, "reverse_fill"],  # interval_type
+        [None, "reverse_fill", "fill"],  # interval_type
         [1, 2, 3, 4, 5],  # seed
     ]
 
@@ -63,7 +63,7 @@ def generate_time():
         [3, 5, 10, 20, 50, 100],  # n_interval
         [5, 10, 20, 50, 100],  # min_length
         [5, 10, 20, 50, 100, 200, np.inf],  # max_length
-        [None, "reverse_fill"],  # interval_type
+        [None, "reverse_fill", "fill"],  # interval_type
         [1, 2, 3, 4, 5],  # seed
     ]
 
@@ -88,7 +88,7 @@ def generate_space():
         [3, 5, 10, 20, 50, 100],  # n_interval
         [500, 1000, 5000, 20000],  # min_length
         [500, 1000, 5000, 20000, 50000, np.inf],  # max_length
-        [None, "reverse_fill"],  # interval_type
+        [None, "reverse_fill", "fill"],  # interval_type
         [1, 2, 3, 4, 5],  # seed
     ]
 

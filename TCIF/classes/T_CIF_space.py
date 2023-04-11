@@ -8,6 +8,7 @@ from TCIF.classes.T_CIF import T_CIF
 
 from CaGeo.algorithms.BasicFeatures import distance
 
+
 class T_CIF_space(T_CIF):
 
     def __init__(self, n_trees, n_interval, min_length, max_length=np.inf, interval_type="percentage", n_jobs=1,
@@ -30,7 +31,7 @@ class T_CIF_space(T_CIF):
         if verbose:
             print(f"{interval_type}, min:{min_length}, max:{max_length}", flush=True)
 
-        if interval_type is None:
+        if interval_type is None or interval_type in ["reverse_fill", "fill"]:
             if type(min_length) != int or (type(max_length) != int and max_length != np.inf):
                 raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
                                  f"interval_type={interval_type}. Please use min_length=int and None=[int or inf]")
@@ -40,10 +41,6 @@ class T_CIF_space(T_CIF):
                 raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
                                  f"interval_type={interval_type}. Please use min_length=float and None=[float or inf]")
 
-        elif interval_type == "reverse_fill":
-            if type(min_length) != int or (type(max_length) != int and max_length != np.inf):
-                raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
-                                 f"interval_type={interval_type}. Please use min_length=int and None=[int or inf]")
         else:
             raise ValueError(f"interval_type={interval_type} unsupported. supported interval types: [None, percentage, "
                              f"reverse_fill]")
@@ -57,7 +54,7 @@ class T_CIF_space(T_CIF):
         if self.max_s == 0:
             raise ValueError("int(max_distance) == 0")
 
-        if self.interval_type in [None, "reverse_fill"]:
+        if self.interval_type in [None, "reverse_fill", "fill"]:
             starting_p = random.sample(range(0, self.max_s - self.min_length), self.n_interval)
             ending_p = []
             for p in starting_p:
@@ -87,7 +84,7 @@ class T_CIF_space(T_CIF):
 
         if key not in self.X_distance_dict:
             self.X_distance_dict[key] = distance(X_row[0], X_row[1])
-        #else: print("hit")
+        # else: print("hit")
 
         X_distance = self.X_distance_dict[key]
 
@@ -135,9 +132,9 @@ class T_CIF_space(T_CIF):
                     or len(
                 return_value[0]) == 0:  # special case: at least 1 element -> in the case that delta_time > stop-start
                 for it, (lat, lon, time, dist) in enumerate(zip(X_row_clone[0],
-                                                                     X_row_clone[1],
-                                                                     X_row_clone[2],
-                                                                     X_distance_clone)):
+                                                                X_row_clone[1],
+                                                                X_row_clone[2],
+                                                                X_distance_clone)):
 
                     if subsequence_space < start:
                         subsequence_space += dist
@@ -153,7 +150,8 @@ class T_CIF_space(T_CIF):
                     subsequence_space += dist
 
                     if subsequence_space >= stop \
-                            and len(return_value[0]) > 0:  # special case: at least 1 element -> in the case that delta_time > stop-start
+                            and len(return_value[
+                                        0]) > 0:  # special case: at least 1 element -> in the case that delta_time > stop-start
                         break
 
                 X_row_clone = (
@@ -166,6 +164,56 @@ class T_CIF_space(T_CIF):
 
             if len(return_value[0]) == 0:
                 print("HERE")
+
+            return (
+                np.array(return_value[0]),
+                np.array(return_value[1]),
+                np.array(return_value[2]),
+            )
+
+        elif self.interval_type == "fill":
+            X_row_clone = (
+                X_row[0],
+                X_row[1],
+                X_row[2]
+            )
+
+            base_lat = X_row_clone[0][0]
+            base_lon = X_row_clone[1][0]
+            base_time = X_row_clone[2][0]
+
+            return_value = ([base_lat], [base_lon], [base_time])
+
+            X_row_clone = (X_row_clone[0][1:] - base_lat, X_row_clone[1][1:] - base_lon, X_row_clone[2][1:] - base_time)
+
+            X_distance_clone = np.copy(X_distance)[1:]
+
+            subsequence_space = 0
+
+            while subsequence_space < stop or len(return_value[0]) == 0:
+                # special case: at least 1 element -> in the case that delta_time > stop-start
+                for it, (lat, lon, time, dist) in enumerate(zip(X_row_clone[0], X_row_clone[1], X_row_clone[2],
+                                                                X_distance_clone)):
+
+                    if subsequence_space < start:
+                        subsequence_space += dist
+                        continue
+
+                    if subsequence_space != 0 and it == 0:  # 1st element after a flip -> skip to avoid duplicates
+                        continue
+
+                    return_value[0].append(
+                        base_lat + lat + X_row_clone[0][-1] * (len(return_value[0]) // len(return_value[0])))
+                    return_value[1].append(
+                        base_lon + lon + X_row_clone[1][-1] * (len(return_value[1]) // len(return_value[0])))
+                    return_value[2].append(
+                        base_time + time + X_row_clone[2][-1] * (len(return_value[2]) // len(return_value[0])))
+
+                    subsequence_space += dist
+
+                    if subsequence_space >= stop and len(return_value[0]) > 0:
+                        # special case: at least 1 element -> in the case that delta_time > stop-start
+                        break
 
             return (
                 np.array(return_value[0]),
