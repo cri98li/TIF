@@ -10,8 +10,8 @@ class T_CIF_observations(T_CIF):
 
     # interval types: {None: [a:b] or [0] if a > len(trj), percentage: percentage, reverse_fill: if a | b > len(trj),
     # reverse trj}
-    def __init__(self, n_trees, n_interval, min_length, max_length=np.inf, interval_type=None, n_jobs=1, seed=42,
-                 verbose=False):
+    def __init__(self, n_trees, n_interval, min_length, max_length=np.inf, interval_type=None, accurate=False,
+                 lat_lon=False,  n_jobs=1, seed=42, verbose=False):
         super().__init__(
             n_trees=n_trees,
             n_interval=n_interval,
@@ -20,13 +20,15 @@ class T_CIF_observations(T_CIF):
             interval_type=interval_type,
             n_jobs=n_jobs,
             seed=seed,
-            verbose=verbose
+            verbose=verbose,
+            accurate=accurate,
+            lat_lon=lat_lon
         )
 
         if verbose:
             print(f"{interval_type}, min:{min_length}, max:{max_length}", flush=True)
 
-        if interval_type is None:
+        if interval_type is None or interval_type in ["reverse_fill", "fill"]:
             if type(min_length) != int or (type(max_length) != int and max_length != np.inf):
                 raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
                                  f"interval_type={interval_type}. Please use min_length=int and None=[int or inf]")
@@ -35,11 +37,6 @@ class T_CIF_observations(T_CIF):
             if type(min_length) != float or type(max_length) != float:
                 raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
                                  f"interval_type={interval_type}. Please use min_length=float and None=[float or inf]")
-
-        elif interval_type == "reverse_fill":
-            if type(min_length) != int or (type(max_length) != int and max_length != np.inf):
-                raise ValueError(f"min_length={type(min_length)} and max_length={type(min_length)} unsupported when "
-                                 f"interval_type={interval_type}. Please use min_length=int and None=[int or inf]")
         else:
             raise ValueError(f"interval_type={interval_type} unsupported. supported interval types: [None, percentage, "
                              f"reverse_fill]")
@@ -49,7 +46,7 @@ class T_CIF_observations(T_CIF):
     def generate_intervals(self):
         random.seed(self.seed)
 
-        if self.interval_type in [None, "reverse_fill"]:
+        if self.interval_type in [None, "reverse_fill", "fill"]:
             max_len = max([len(x[0]) for x in self.X])
 
             starting_p = random.sample(range(0, max_len - self.min_length), self.n_interval)
@@ -129,7 +126,32 @@ class T_CIF_observations(T_CIF):
                     if count == interval_len:
                         break
             return return_value
+        elif self.interval_type == "fill":
+            interval_len = stop - start
 
+            subset = tuple([x[start:min(stop, len(x))] for x in X_row])
+
+            if len(subset[0]) == 0:  # special case: start > len(trajectory)
+                return (X_row[0][-1:], X_row[1][-1:], X_row[2][-1:])
+
+            base_lat = subset[0][0]
+            base_lon = subset[1][0]
+            base_time = subset[2][0]
+
+            subset = (subset[0][1:]-base_lat, subset[1][1:]-base_lon, subset[2][1:]-base_time)
+
+            return_value = (
+                np.zeros(interval_len),
+                np.zeros(interval_len),
+                np.zeros(interval_len),
+            )
+
+            for i in range(1, interval_len):
+                return_value[0][i] = base_lat + subset[0][i % len(subset[0])] + subset[0][-1] * (i // len(subset[0]))
+                return_value[1][i] = base_lat + subset[1][i % len(subset[1])] + subset[1][-1] * (i // len(subset[1]))
+                return_value[2][i] = base_lat + subset[2][i % len(subset[2])] + subset[2][-1] * (i // len(subset[2]))
+
+            return return_value
     def print_sections(self):
         width = os.get_terminal_size().columns
 
