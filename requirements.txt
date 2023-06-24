@@ -1,0 +1,4 @@
+CaGeo>=0.0.5
+numpy
+pandas
+tqdm

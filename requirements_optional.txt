@@ -1,3 +1,5 @@
 black
 sphinx
 sphinx_rtd_theme
+psutil
+scikit-learn

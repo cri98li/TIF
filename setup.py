@@ -1,6 +1,7 @@
-from setuptools import setup, find_packages
 from codecs import open
 from os import path
+
+from setuptools import setup, find_packages
 
 __author__ = "PackageOwner"
 __license__ = "BSD-2-Clause"
