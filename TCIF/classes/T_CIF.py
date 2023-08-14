@@ -13,7 +13,6 @@ import CaGeo.algorithms.AggregateFeatures as af
 import CaGeo.algorithms.BasicFeatures as bf
 import CaGeo.algorithms.SegmentFeatures as sf
 import numpy as np
-from memory_profiler import profile
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble._base import _partition_estimators

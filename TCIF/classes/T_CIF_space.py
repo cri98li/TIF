@@ -7,7 +7,6 @@ import numpy as np
 from TCIF.classes.T_CIF import T_CIF
 
 from CaGeo.algorithms.BasicFeatures import distance
-from memory_profiler import profile
 
 
 class T_CIF_space(T_CIF):
