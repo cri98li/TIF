@@ -35,7 +35,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
         self.max_length = max_length
         self.interval_type = interval_type
         self.accurate = accurate
-        self.include_lat_lon = lat_lon
+        self.lat_lon = lat_lon
         self.n_jobs = n_jobs
         self.seed = seed
         self.verbose = verbose
@@ -88,7 +88,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
         """for feature in tqdm(self.executor.map(_transform_inner_loop, self._chunkize(X, n_chunk),
                                               repeat(self.starts), repeat(self.stops), repeat(str(type(self))),
                                               repeat(self.min_length), repeat(self.interval_type),
-                                              repeat(self.accurate), repeat(self.include_lat_lon)
+                                              repeat(self.accurate), repeat(self.lat_lon)
                                               ),
                             total=n_chunk, disable=not self.verbose):
             features += feature"""
@@ -110,7 +110,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
                                                   self.min_length,
                                                   self.interval_type,
                                                   self.accurate,
-                                                  self.include_lat_lon,
+                                                  self.lat_lon,
                                                   "ciao"
                                                   )
                              )
@@ -130,7 +130,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
 
         estimators = Parallel(n_jobs=self.n_jobs, verbose=1, prefer="processes")(
             delayed(_transform_inner_loop)(X_chunk, self.starts, self.stops, str(type(self)), self.min_length,
-                                           self.interval_type, self.accurate, self.include_lat_lon)
+                                           self.interval_type, self.accurate, self.lat_lon)
             for i, X_chunk in enumerate(X_chunk_list))
 
 
@@ -161,7 +161,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
         final_features = []
         for i in range(len(self.starts)):
             base_features = ["speed", "dist", "direction", "turningAngles", "acceleration", "acceleration2"]
-            if self.include_lat_lon:
+            if self.lat_lon:
                 base_features += ["lat", "lon", "time"]
 
             for base_feature in base_features:
@@ -180,7 +180,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
         pass
 
 #@profile
-def _transform_inner_loop(X_list, starts, stops, tipo, min_length, interval_type, accurate, include_lat_lon):
+def _transform_inner_loop(X_list, starts, stops, tipo, min_length, interval_type, accurate, lat_lon):
     #import sys
     #print(sys.getsizeof(X_list))
     verbose = False
@@ -189,7 +189,7 @@ def _transform_inner_loop(X_list, starts, stops, tipo, min_length, interval_type
         warnings.filterwarnings('ignore')
 
     n_base = 6
-    n_base += 3 if include_lat_lon else 0
+    n_base += 3 if lat_lon else 0
 
     features = np.zeros((len(X_list), (n_base*9+4)*len(starts)))*np.nan
 
@@ -221,7 +221,7 @@ def _transform_inner_loop(X_list, starts, stops, tipo, min_length, interval_type
                 np.nan_to_num(bf.acceleration2(X_lat_sub, X_lon_sub, X_time_sub, accurate=dist[1:]))
             ]
 
-            if include_lat_lon:
+            if lat_lon:
                 transformed += [X_lat_sub, X_lon_sub, X_time_sub]
 
             for arr in tqdm(transformed, disable=not verbose, desc="computing aggregate features",
