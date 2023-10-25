@@ -128,7 +128,7 @@ class T_CIF(BaseEstimator, ClassifierMixin, ABC):
         for i in range(0, len(X), chunk_size):
             X_chunk_list.append(deepcopy(X[i:i + chunk_size]))
 
-        estimators = Parallel(n_jobs=self.n_jobs, verbose=1, prefer="processes")(
+        estimators = Parallel(n_jobs=self.n_jobs, verbose=self.verbose, prefer="processes")(
             delayed(_transform_inner_loop)(X_chunk, self.starts, self.stops, str(type(self)), self.min_length,
                                            self.interval_type, self.accurate, self.lat_lon)
             for i, X_chunk in enumerate(X_chunk_list))
